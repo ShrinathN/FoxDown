@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [$1 = ""]
+if ["$1" = ""]
 then
 	printf "Usage\n$0 [link]\n"
 	exit
@@ -13,6 +13,7 @@ CURRENT_CHAPTER=""
 CURRENT_CHAPTER_BASE_URL=""
 CURRENT_PAGE_NUMBER=""
 CURRENT_DIRECTORY=""
+THIS_DIR=""
 
 
 wget -U="$USER_AGENT" -O main_page.html "$SUPPLIED_LINK" #this downloads the main link page
@@ -34,7 +35,16 @@ do
 	while read CURRENT_PAGE_NUMBER #loops over all the pages
 	do
 		wget -U="$USER_AGENT" -O current_page.html "$CURRENT_CHAPTER_BASE_URL$CURRENT_PAGE_NUMBER.html"
-		wget -nc -O $CURRENT_DIRECTORY$CURRENT_PAGE_NUMBER $(grep -o -m 1 a.fanfox.net/store/manga[^?]* current_page.html) # this is to get the image url from the page, and download it
+		wget -nc -O $CURRENT_DIRECTORY$CURRENT_PAGE_NUMBER.jpg $(grep -o -m 1 a.fanfox.net/store/manga[^?]* current_page.html) # this is to get the image url from the page, and download it
 	done < page_list.txt
-
+	rm page_list.txt
+	if [ "$2" = "y" ]
+	then
+		THIS_DIR="$PWD"
+		cd "$CURRENT_DIRECTORY"
+		zip -0 $(printf "$PWD" | grep -o "/c.*" | grep -o c.*).cbz *.jpg
+		mv *.cbz $THIS_DIR/
+		cd $THIS_DIR
+	fi
+	
 done < chapters_list.txt
